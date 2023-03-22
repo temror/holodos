@@ -1,6 +1,7 @@
 <template>
   <main class="main">
     <input placeholder="че завалялось?" v-model="state.input" @change="log" class="main__input"/>
+    <el-button><a href="/asd" style="color: #464646; text-decoration: none">Привет</a></el-button>
   </main>
 </template>
 
@@ -41,6 +42,7 @@ watch(()=>state.input, ()=>{
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   &__input{
@@ -51,6 +53,18 @@ watch(()=>state.input, ()=>{
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(1,1,1,0.2);
     outline: none;
+    margin: 30px;
+  }
+}
+@media (max-width: 900px) {
+  .main{
+    &__input{
+      padding: 15px;
+      font-size: 25px;
+      width: 100%;
+      max-width: 500px;
+      color: #464646;
+    }
   }
 }
 </style>
