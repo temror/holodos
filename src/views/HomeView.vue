@@ -1,28 +1,57 @@
 <template>
   <main class="main" @click="state.showRes=false">
     <div @click.stop style="position: relative">
-      <div v-if="state.selectedProducts.length!==0" class="main__addProd">
-        <p v-for="(prod, index) in state.selectedProducts">{{ prod.title }}
-          <el-icon style="margin-left: 10px; cursor: pointer" @click="state.selectedProducts.splice(index,1)">
-            <Close/>
-          </el-icon>
-        </p>
+      <div class="main__results">
+        <div v-if="state.selectedProducts.length!==0" class="main__addProd">
+          <p v-for="(prod, index) in state.selectedProducts">{{ prod.title }}
+            <el-icon style="margin-left: 10px; cursor: pointer" @click="state.selectedProducts.splice(index,1)">
+              <Close/>
+            </el-icon>
+          </p>
+          <p style="background-color: #337ecc; color: white; cursor:pointer;" @click="find">Найти че приготовить 🍲</p>
+        </div>
+        <div class="main__meals" v-if="state.findMeals.length!==0">
+          <h2>А вот че</h2>
+          <div v-for="meal in state.findMeals">
+            <h3>{{meal.title}}</h3>
+            <p>Че есть: {{meal.selectedProducts.reduce((acc,el)=>acc+=`${el.title}, `,"").slice(0,-2)}}</p>
+            <p>Че надо: {{meal.products.reduce((acc,el)=>acc+=`${el.title}, `,"").slice(0,-2)}}</p>
+          </div>
+        </div>
       </div>
       <input placeholder="че завалялось?" v-model="state.input" @change="log" class="main__input" @focusin="state.showRes=true"/>
       <div class="main__searchRes" v-if="state.results.length !== 0 && state.showRes">
         <p v-for="item in state.results" @click="()=>add(item)">{{ item.title }}</p>
       </div>
     </div>
+    <Fetching v-if="store.isFetching"/>
   </main>
 </template>
-
 <script setup>
 import {reactive, watch} from "vue";
 import axios from "axios";
 import {Close} from "@element-plus/icons-vue";
+import Fetching from "@/components/Fetching.vue";
+import {useMainStore} from "@/stores/counter";
+
+const store = useMainStore()
+
+const delLast = str => str.slice(0,-1)
 
 const log = () => {
   console.log(state.input)
+}
+
+const find = async () =>{
+  const productsId = state.selectedProducts.map(item => item.id)
+  store.isFetching = true
+  await axios.post(import.meta.env.VITE_BASE_URL + "/api/meals", {
+    productsId
+  }).then(res => {
+    console.log(res)
+    state.findMeals = res.data.sort((a,b)=>b.selectedProducts.length-a.selectedProducts.length)
+  })
+  store.isFetching = false
 }
 
 function debounce(callback, delay) {
@@ -61,6 +90,7 @@ const state = reactive({
   input: '',
   results: [],
   selectedProducts: [],
+  findMeals: [],
   showRes: false
 })
 
@@ -116,10 +146,13 @@ watch(() => state.input, () => {
     }
   }
 
-  &__addProd {
+  &__results{
     position: absolute;
     top: 120px;
     left: 30px;
+  }
+
+  &__addProd {
     display: flex;
     flex-wrap: wrap;
     width: 40rem;
@@ -134,6 +167,10 @@ watch(() => state.input, () => {
       display: flex;
       align-items: center;
     }
+  }
+
+  &__meals{
+    flex: 1 1 auto;
   }
 }
 
