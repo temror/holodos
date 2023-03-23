@@ -41,7 +41,7 @@ function debounce(callback, delay) {
 const req = async () => {
   if (state.input) {
     await axios.post(import.meta.env.VITE_BASE_URL + "/api/products", {
-      input: state.input
+      input: state.input.toLowerCase()
     }).then(res => state.results = res.data)
   } else {
     state.results = []
