@@ -1,7 +1,14 @@
 <template>
-  <div class="products" @click="state.edited=false">
-    <h1 class="products__title">Products</h1>
+  <div class="products" @click="()=>{
+    state.edited=false
+    state.added=false
+  }">
+    <h1 class="products__title">продукты
+      <div class="products__item products__item_plus" @click.stop="state.added=true">
+        <span>+</span>
+      </div></h1>
     <input type="text" class="products__input" v-if="state.edited" v-model="state.editValue.title" @keydown.enter="edit" v-focus @click.stop>
+    <input type="text" class="products__input" v-if="state.added" v-model="state.addValue" @keydown.enter="add" placeholder="Добавить продукт" v-focus @click.stop>
     <div class="products__content">
       <div class="products__item" v-for="product in state.products" @click.stop="()=>{
         state.edited = true
@@ -27,7 +34,9 @@ const vFocus = {
 const state = reactive({
   products: [],
   editValue: null,
-  edited: false
+  addValue: "",
+  edited: false,
+  added: false
 })
 
 const edit = async () =>{
@@ -40,6 +49,18 @@ const edit = async () =>{
     store.isFetching = false
   })
   state.editValue = null
+  await init()
+}
+
+const add = async () =>{
+  store.isFetching = true
+  state.added = false
+  await axios.post(import.meta.env.VITE_BASE_URL + "/api/products/add",{
+    title: state.addValue
+  }).then(res => {
+    store.isFetching = false
+  })
+  state.addValue = null
   await init()
 }
 
@@ -64,6 +85,10 @@ onMounted(async () => {
   flex-direction: column;
   &__title{
     text-align: center;
+    font-weight: lighter;
+    font-size: 40px;
+    display: flex;
+    align-items: center;
   }
   &__content {
     display: flex;
@@ -82,6 +107,15 @@ onMounted(async () => {
       scale: 1.1;
       transition: 0.2s;
     }
+  }
+  &__item_plus{
+    background-color: #8d1aad;
+    color: white;
+    border: none;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   &__input{
     border: none;
