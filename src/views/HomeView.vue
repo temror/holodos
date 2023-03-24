@@ -1,25 +1,34 @@
 <template>
   <main class="main" @click="state.showRes=false">
-    <div @click.stop style="position: relative">
-      <div class="main__results">
-        <div v-if="state.selectedProducts.length!==0" class="main__addProd">
-          <p v-for="(prod, index) in state.selectedProducts">{{ prod.title }}
-            <el-icon style="margin-left: 10px; cursor: pointer" @click="state.selectedProducts.splice(index,1)">
-              <Close/>
-            </el-icon>
-          </p>
-          <p style="background-color: #337ecc; color: white; cursor:pointer;" @click="find">Найти че приготовить 🍲</p>
+    <div @click.stop style="position: relative; width: 100%; display: flex; align-items: center; justify-content: center">
+      <img :src="state.img" alt="" v-if="state.img!==''"/>
+      <div style="position: relative; display: flex; flex-direction: column; align-items: center">
+        <input placeholder="че завалялось?" v-model="state.input" @change="log" class="main__input"
+               @focusin="state.showRes=true"/>
+        <div class="main__results">
+          <div v-if="state.selectedProducts.length!==0" class="main__addProd">
+            <p v-for="(prod, index) in state.selectedProducts">{{ prod.title }}
+              <el-icon style="margin-left: 10px; cursor: pointer" @click="state.selectedProducts.splice(index,1)">
+                <Close/>
+              </el-icon>
+            </p>
+            <p style="background-color: #337ecc; color: white; cursor:pointer;" @click="find">Найти че приготовить 🍲</p>
+          </div>
         </div>
         <div class="main__meals" v-if="state.findMeals.length!==0">
           <h2>А вот че</h2>
-          <div v-for="meal in state.findMeals">
-            <h3>{{meal.title}}</h3>
-            <p>Че есть: {{meal.selectedProducts.reduce((acc,el)=>acc+=`${el.title}, `,"").slice(0,-2)}}</p>
-            <p>Че надо: {{meal.products.reduce((acc,el)=>acc+=`${el.title}, `,"").slice(0,-2)}}</p>
+          <div class="main__mealContent">
+            <div v-for="meal in state.findMeals" class="main__meal">
+              <h3>{{ meal.title }}</h3>
+              <img :src="img + meal.image" alt="" v-if="meal.image" style="width: 150px; height: 150px;">
+              <p><span>Че есть: </span>{{ meal.selectedProducts.reduce((acc, el) => acc += `${el.title}, `, "").slice(0, -2) }}</p>
+              <p><span>Че надо: </span>{{ meal.products.reduce((acc, el) => acc += `${el.title}, `, "").slice(0, -2) }}</p>
+            </div>
           </div>
         </div>
       </div>
-      <input placeholder="че завалялось?" v-model="state.input" @change="log" class="main__input" @focusin="state.showRes=true"/>
+      <input type="file" ref="file" @change="fileLoader" hidden>
+<!--      <button @click="$refs.file.click">Открыть файл</button>-->
       <div class="main__searchRes" v-if="state.results.length !== 0 && state.showRes">
         <p v-for="item in state.results" @click="()=>add(item)">{{ item.title }}</p>
       </div>
@@ -36,20 +45,34 @@ import {useMainStore} from "@/stores/counter";
 
 const store = useMainStore()
 
-const delLast = str => str.slice(0,-1)
+const img ="data:image/jpeg;base64,"
 
+const fileLoader = async e =>{
+  const file = e.target.files[0]
+  const reader = new FileReader()
+  reader.readAsDataURL(file)
+  reader.onload = async () =>{
+    console.log(reader.result)
+   /* await axios.post(import.meta.env.VITE_BASE_URL + "/api/meals/img", {
+      image: reader.result.split(',')[1],
+      id: 3
+    }).then(res => {
+      console.log(res)
+    })*/
+  }
+}
 const log = () => {
   console.log(state.input)
 }
 
-const find = async () =>{
+const find = async () => {
   const productsId = state.selectedProducts.map(item => item.id)
   store.isFetching = true
   await axios.post(import.meta.env.VITE_BASE_URL + "/api/meals", {
     productsId
   }).then(res => {
     console.log(res)
-    state.findMeals = res.data.sort((a,b)=>b.selectedProducts.length-a.selectedProducts.length)
+    state.findMeals = res.data.sort((a, b) => b.selectedProducts.length - a.selectedProducts.length)
   })
   store.isFetching = false
 }
@@ -80,7 +103,7 @@ const req = async () => {
 const add = product => {
   if (state.selectedProducts.filter(item => item.id === product.id).length === 0) {
     state.selectedProducts.push(product)
-    state.showRes=false
+    state.showRes = false
   }
 }
 
@@ -91,7 +114,8 @@ const state = reactive({
   results: [],
   selectedProducts: [],
   findMeals: [],
-  showRes: false
+  showRes: false,
+  img: ''
 })
 
 watch(() => state.input, () => {
@@ -146,7 +170,7 @@ watch(() => state.input, () => {
     }
   }
 
-  &__results{
+  &__results {
     position: absolute;
     top: 120px;
     left: 30px;
@@ -169,8 +193,51 @@ watch(() => state.input, () => {
     }
   }
 
-  &__meals{
+  &__meals {
     flex: 1 1 auto;
+    width: 80vw;
+    position: absolute;
+    top: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-bottom: 100px;
+    h2{
+      text-align: center;
+      font-family: Dialog, sans-serif;
+      font-weight: normal;
+      font-size: 30px;
+    }
+  }
+
+  &__meal {
+    max-width: 20rem;
+    padding: 20px;
+    margin: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(1,1,1,0.2);
+    cursor: pointer;
+    transition: 0.1s;
+    &:hover{
+      scale: 1.01;
+      transition: 0.1s;
+    }
+    h3{
+      font-weight: lighter;
+      font-family: Dialog, sans-serif;
+      font-size: 1.5rem;
+    }
+    span{
+      font-weight: bold;
+    }
+    p{
+      font-family: Dialog, sans-serif;
+    }
+  }
+  &__mealContent {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
   }
 }
 
@@ -184,12 +251,22 @@ watch(() => state.input, () => {
       max-width: 500px;
       color: #464646;
     }
+
     &__searchRes {
       width: 85%;
     }
+
     &__addProd {
       bottom: 100px;
       width: 85%;
+    }
+    &__meal{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      p{
+        text-align: center;
+      }
     }
   }
 }
