@@ -20,15 +20,13 @@
           <div class="main__mealContent">
             <div v-for="meal in state.findMeals" class="main__meal">
               <h3>{{ meal.title }}</h3>
-              <img :src="img + meal.image" alt="" v-if="meal.image" style="width: 150px; height: 150px;">
+              <img :src="meal.image" alt="" v-if="meal.image" style="width: 150px; height: 150px;">
               <p><span>Че есть: </span>{{ meal.selectedProducts.reduce((acc, el) => acc += `${el.title}, `, "").slice(0, -2) }}</p>
               <p><span>Че надо: </span>{{ meal.products.reduce((acc, el) => acc += `${el.title}, `, "").slice(0, -2) }}</p>
             </div>
           </div>
         </div>
       </div>
-      <input type="file" ref="file" @change="fileLoader" hidden>
-<!--      <button @click="$refs.file.click">Открыть файл</button>-->
       <div class="main__searchRes" v-if="state.results.length !== 0 && state.showRes">
         <p v-for="item in state.results" @click="()=>add(item)">{{ item.title }}</p>
       </div>
@@ -44,26 +42,6 @@ import Fetching from "@/components/Fetching.vue";
 import {useMainStore} from "@/stores/counter";
 
 const store = useMainStore()
-
-const img ="data:image/jpeg;base64,"
-
-const fileLoader = async e =>{
-  const file = e.target.files[0]
-  const reader = new FileReader()
-  reader.readAsDataURL(file)
-  reader.onload = async () =>{
-    console.log(reader.result)
-   /* await axios.post(import.meta.env.VITE_BASE_URL + "/api/meals/img", {
-      image: reader.result.split(',')[1],
-      id: 3
-    }).then(res => {
-      console.log(res)
-    })*/
-  }
-}
-const log = () => {
-  console.log(state.input)
-}
 
 const find = async () => {
   const productsId = state.selectedProducts.map(item => item.id)

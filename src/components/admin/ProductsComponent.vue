@@ -66,7 +66,7 @@ const add = async () =>{
 
 const init = async () =>{
   store.isFetching = true
-  axios.get(import.meta.env.VITE_BASE_URL + "/api/products").then(res => {
+  await axios.get(import.meta.env.VITE_BASE_URL + "/api/products").then(res => {
     state.products = res.data
     store.isFetching = false
   })

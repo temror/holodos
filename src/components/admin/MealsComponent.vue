@@ -1,72 +1,154 @@
 <template>
-  <div class="products" @click="()=>{
-    state.edited=false
-    state.added=false
-  }">
+  <div class="products">
     <h1 class="products__title">блюда
-      <div class="products__item products__item_plus" @click.stop="state.added=true">
-        <span>+</span>
-      </div></h1>
-    <input type="text" class="products__input" v-if="state.edited" v-model="state.editValue.title" @keydown.enter="edit" v-focus @click.stop>
-    <input type="text" class="products__input" v-if="state.added" v-model="state.addValue" @keydown.enter="add" placeholder="Добавить продукт" v-focus @click.stop>
-    <div class="products__content">
-      <div class="products__item" v-for="product in state.products" @click.stop="()=>{
+      <div class="products__item products__item_plus" @click="()=>{
         state.edited = true
-        state.editValue=product
+        state.added = true
       }">
-        <span>{{ product.title }}</span>
+        <span>+</span>
+      </div>
+    </h1>
+    <div class="products__content">
+      <div class="products__item" v-for="meal in state.meals" @click.stop="()=>{editInit(meal.id)}">
+        <span>{{ meal.title }}</span>
       </div>
     </div>
+    <WindowComponent v-if="state.added||state.edited" @closeWindow="()=>{
+      state.added = false
+      state.edited = false
+    }">
+      <div class="products__add">
+        <h1>Создать блюдо</h1>
+        <p>Название:</p>
+        <el-input v-model="state.addedMeal.title" placeholder="Название"/>
+        <p>Описание:</p>
+        <el-input v-model="state.addedMeal.description" type="textarea" placeholder="Описание"/>
+        <p>Изображение:</p>
+        <el-input placeholder="Ссылка на изображение" v-model="state.addImage"/>
+        <img :src="state.addImage" alt="" v-if="state.addImage.length !== ''">
+        <p>Ингредиенты:</p>
+        <el-select
+            v-model="state.addedMeal.products"
+            multiple
+            class="m-2"
+            placeholder="Select"
+            size="large">
+          <el-option
+              v-for="item in state.products.sort((a,b)=>a.title.localeCompare(b.title)).map(item =>{
+              return {value: item.id,label: item.title}})"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+          />
+        </el-select>
+        <el-button type="success" style="margin: 20px 0; align-self: flex-start" size="large" @click="()=>{
+          if(state.added){createMeal()}
+          if(state.edited){editMeal()}
+        }">
+          Добавить
+        </el-button>
+      </div>
+    </WindowComponent>
   </div>
 </template>
 
 <script setup>
-import {onMounted, reactive} from "vue";
+import {computed, onMounted, reactive} from "vue";
 import axios from "axios";
 import {useMainStore} from "@/stores/counter";
+import WindowComponent from "@/components/WindowComponent.vue";
+
+const log = () => {
+  console.log(state.addedMeal)
+}
 
 const store = useMainStore()
 
-const vFocus = {
-  mounted: (el) => el.focus()
+const editInit = async id => {
+  store.isFetching = true
+  await axios.get(import.meta.env.VITE_BASE_URL + "/api/meals/" + id).then(res => {
+    state.addedMeal.id = res.data.id
+    state.addedMeal.title = res.data.title
+    state.addedMeal.description = res.data.description
+    state.addImage = res.data.image
+    state.addedMeal.products = res.data.products.map(product => product.id)
+    store.isFetching = false
+    console.log(res)
+  })
+  state.edited = true
+}
+
+const editMeal = async () =>{
+  store.isFetching = true
+  await axios.put(import.meta.env.VITE_BASE_URL + "/api/meals/edit", {
+    id: state.addedMeal.id,
+    title: state.addedMeal.title,
+    description: state.addedMeal.description,
+    image: state.addImage,
+    products: state.addedMeal.products
+  }).then(res => {
+    store.isFetching = false
+    console.log(res)
+  })
+  state.edited = false
+  await init()
+  state.addedMeal ={
+        title: '',
+        description: '',
+        image: '',
+        products: []
+  }
+  state.edited = false
+  state.added = false
+}
+
+const createMeal = async () => {
+  store.isFetching = true
+  await axios.post(import.meta.env.VITE_BASE_URL + "/api/meals/create", {
+    title: state.addedMeal.title,
+    description: state.addedMeal.description,
+    image: state.addImage,
+    products: state.addedMeal.products
+  }).then(res => {
+    store.isFetching = false
+    console.log(res)
+  })
+  state.edited = false
+  state.added = false
+  await init()
+  state.addedMeal ={
+    title: '',
+    description: '',
+    image: '',
+    products: []
+  }
 }
 
 const state = reactive({
+  meals: [],
   products: [],
-  editValue: null,
-  addValue: "",
+  added: false,
   edited: false,
-  added: false
+  addedMeal: {
+    title: '',
+    description: '',
+    image: '',
+    products: []
+  },
+  addImage: ''
 })
 
-const edit = async () =>{
-  store.isFetching = true
-  state.edited = false
-  await axios.put(import.meta.env.VITE_BASE_URL + "/api/products/edit",{
-    id: state.editValue.id,
-    title: state.editValue.title
-  }).then(res => {
-    store.isFetching = false
-  })
-  state.editValue = null
-  await init()
-}
-
-const add = async () =>{
-  store.isFetching = true
-  state.added = false
-  await axios.post(import.meta.env.VITE_BASE_URL + "/api/products/add",{
-    title: state.addValue
-  }).then(res => {
-    store.isFetching = false
-  })
-  state.addValue = null
-  await init()
-}
-
-const init = async () =>{
+const init = async () => {
   store.isFetching = true
   axios.get(import.meta.env.VITE_BASE_URL + "/api/meals").then(res => {
+    state.meals = res.data
+    store.isFetching = false
+  })
+}
+
+const initProducts = async () => {
+  store.isFetching = true
+  await axios.get(import.meta.env.VITE_BASE_URL + "/api/products").then(res => {
     state.products = res.data
     store.isFetching = false
   })
@@ -74,6 +156,7 @@ const init = async () =>{
 
 onMounted(async () => {
   await init()
+  await initProducts()
 })
 </script>
 
@@ -83,32 +166,37 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  &__title{
+
+  &__title {
     text-align: center;
     font-weight: lighter;
     font-size: 40px;
     display: flex;
     align-items: center;
   }
+
   &__content {
     display: flex;
     flex-wrap: wrap;
     max-width: 1000px;
     justify-content: space-between;
   }
-  &__item{
+
+  &__item {
     padding: 10px;
     margin: 10px;
     border-radius: 5px;
-    border:  1px solid #505050;
+    border: 1px solid #505050;
     cursor: pointer;
     transition: 0.2s;
-    &:hover{
+
+    &:hover {
       scale: 1.1;
       transition: 0.2s;
     }
   }
-  &__item_plus{
+
+  &__item_plus {
     background-color: #8d1aad;
     color: white;
     border: none;
@@ -117,14 +205,14 @@ onMounted(async () => {
     align-items: center;
     justify-content: center;
   }
-  &__input{
-    border: none;
-    width: auto;
-    box-shadow: 0 0 10px rgba(1,1,1,0.2);
-    padding: 10px;
-    margin: 30px;
-    border-radius: 5px;
-    outline: none;
+
+  &__add {
+    display: flex;
+    flex-direction: column;
+
+    h1 {
+      font-weight: lighter;
+    }
   }
 }
 </style>
