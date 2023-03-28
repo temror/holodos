@@ -20,7 +20,7 @@
           <div class="main__mealContent">
             <div v-for="meal in state.findMeals" class="main__meal">
               <h3>{{ meal.title }}</h3>
-              <img :src="meal.image" alt="" v-if="meal.image" style="width: 150px; height: 150px;">
+              <img :src="meal.image.file" alt="" v-if="meal.image" style="width: 150px; height: 150px;">
               <p><span>Че есть: </span>{{ meal.selectedProducts.reduce((acc, el) => acc += `${el.title}, `, "").slice(0, -2) }}</p>
               <p><span>Че надо: </span>{{ meal.products.reduce((acc, el) => acc += `${el.title}, `, "").slice(0, -2) }}</p>
             </div>
