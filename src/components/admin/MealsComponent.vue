@@ -24,7 +24,7 @@
         <p>Описание:</p>
         <el-input v-model="state.addedMeal.description" type="textarea" placeholder="Описание"/>
         <p>Изображение:</p>
-        <el-input placeholder="Ссылка на изображение" v-model="state.addImage"/>
+        <el-input placeholder="Название изображения" style="margin-bottom: 20px" v-model="state.addedMeal.image"/>
         <img :src="state.addImage" alt="" v-if="state.addImage.length !== ''">
         <p>Ингредиенты:</p>
         <el-select
@@ -70,7 +70,8 @@ const editInit = async id => {
     state.addedMeal.id = res.data.id
     state.addedMeal.title = res.data.title
     state.addedMeal.description = res.data.description
-    state.addImage = res.data.image
+    state.addedMeal.image = res.data.image.name
+    state.addImage = res.data.image.file
     state.addedMeal.products = res.data.products.map(product => product.id)
     store.isFetching = false
     console.log(res)
@@ -84,7 +85,7 @@ const editMeal = async () =>{
     id: state.addedMeal.id,
     title: state.addedMeal.title,
     description: state.addedMeal.description,
-    image: state.addImage,
+    image: state.addedMeal.image,
     products: state.addedMeal.products
   }).then(res => {
     store.isFetching = false
@@ -107,7 +108,7 @@ const createMeal = async () => {
   await axios.post(import.meta.env.VITE_BASE_URL + "/api/meals/create", {
     title: state.addedMeal.title,
     description: state.addedMeal.description,
-    image: state.addImage,
+    image: state.addedMeal.image,
     products: state.addedMeal.products
   }).then(res => {
     store.isFetching = false
