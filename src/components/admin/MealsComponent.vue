@@ -30,11 +30,16 @@
         <el-select
             v-model="state.addedMeal.products"
             multiple
+            filterable
+            remote
+            reserve-keyword
+            remote-show-suffix
             class="m-2"
-            placeholder="Select"
+            placeholder="Выбирай"
+            :remote-method="remoteMethod"
             size="large">
           <el-option
-              v-for="item in state.products.sort((a,b)=>a.title.localeCompare(b.title)).map(item =>{
+              v-for="item in state.options.sort((a,b)=>a.title.localeCompare(b.title)).map(item =>{
               return {value: item.id,label: item.title}})"
               :key="item.value"
               :label="item.label"
@@ -53,12 +58,44 @@
 </template>
 
 <script setup>
-import {computed, onMounted, reactive} from "vue";
+import {computed, onMounted, reactive, ref} from "vue";
 import axios from "axios";
 import {useMainStore} from "@/stores/mainStore";
 import WindowComponent from "@/components/WindowComponent.vue";
 
+
+const state = reactive({
+    meals: [],
+    products: [],
+    options: [],
+    added: false,
+    edited: false,
+    addedMeal: {
+        title: '',
+        description: '',
+        image: '',
+        products: []
+    },
+    addImage: ''
+})
+
 const store = useMainStore()
+
+const loading = ref(false)
+
+const remoteMethod = (query) => {
+    if (query) {
+        loading.value = true
+        setTimeout(() => {
+            loading.value = false
+            state.options = state.products.filter((item) => {
+                return item.title.toLowerCase().includes(query.toLowerCase())
+            })
+        }, 0)
+    } else {
+        state.options = []
+    }
+}
 
 const editInit = async id => {
   store.isFetching = true
@@ -117,20 +154,6 @@ const createMeal = async () => {
     products: []
   }
 }
-
-const state = reactive({
-  meals: [],
-  products: [],
-  added: false,
-  edited: false,
-  addedMeal: {
-    title: '',
-    description: '',
-    image: '',
-    products: []
-  },
-  addImage: ''
-})
 
 const init = async () => {
   store.isFetching = true
