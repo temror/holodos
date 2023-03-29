@@ -84,9 +84,7 @@ const loading = ref(false)
 
 const remoteMethod = (query) => {
     if (query) {
-        loading.value = true
         setTimeout(() => {
-            loading.value = false
             state.options = state.products.filter((item) => {
                 return item.label.toLowerCase().includes(query.toLowerCase())
             })
@@ -113,6 +111,7 @@ const editInit = async id => {
           state.addedMeal.products.push(item.value)
       }
   })
+    state.options=state.products
   state.edited = true
 }
 
