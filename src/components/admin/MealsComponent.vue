@@ -39,8 +39,7 @@
             :remote-method="remoteMethod"
             size="large">
           <el-option
-              v-for="item in state.options.sort((a,b)=>a.title.localeCompare(b.title)).map(item =>{
-              return {value: item.id,label: item.title}})"
+              v-for="item in state.options"
               :key="item.value"
               :label="item.label"
               :value="item.value"
@@ -89,7 +88,7 @@ const remoteMethod = (query) => {
         setTimeout(() => {
             loading.value = false
             state.options = state.products.filter((item) => {
-                return item.title.toLowerCase().includes(query.toLowerCase())
+                return item.label.toLowerCase().includes(query.toLowerCase())
             })
         }, 0)
     } else {
@@ -99,19 +98,32 @@ const remoteMethod = (query) => {
 
 const editInit = async id => {
   store.isFetching = true
+  let resProducts = []
   await axios.get(import.meta.env.VITE_BASE_URL + "/api/meals/" + id).then(res => {
     state.addedMeal.id = res.data.id
     state.addedMeal.title = res.data.title
     state.addedMeal.description = res.data.description.result.path
     state.addedMeal.image = res.data.image.name
     state.addImage = res.data.image.file
-    state.addedMeal.products = res.data.products.map(product => product.id)
+    resProducts = res.data.products.map(item => item.id)
     store.isFetching = false
+  })
+    state.products.forEach(item=>{
+      if(resProducts.includes(item.value)){
+          state.addedMeal.products.push(item.value)
+      }
   })
   state.edited = true
 }
 
 const editMeal = async () =>{
+    console.log({
+        id: state.addedMeal.id,
+        title: state.addedMeal.title,
+        description: state.addedMeal.description,
+        image: state.addedMeal.image,
+        products: state.addedMeal.products
+    })
   store.isFetching = true
   await axios.put(import.meta.env.VITE_BASE_URL + "/api/meals/edit", {
     id: state.addedMeal.id,
@@ -166,7 +178,8 @@ const init = async () => {
 const initProducts = async () => {
   store.isFetching = true
   await axios.get(import.meta.env.VITE_BASE_URL + "/api/products").then(res => {
-    state.products = res.data
+    state.products = res.data.sort((a,b)=>a.title.localeCompare(b.title)).map(item =>{
+          return {value: item.id, label: item.title}})
     store.isFetching = false
   })
 }
