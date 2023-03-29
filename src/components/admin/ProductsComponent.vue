@@ -23,7 +23,7 @@
 <script setup>
 import {onMounted, reactive} from "vue";
 import axios from "axios";
-import {useMainStore} from "@/stores/counter";
+import {useMainStore} from "@/stores/mainStore";
 
 const store = useMainStore()
 

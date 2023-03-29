@@ -9,13 +9,9 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import {Close} from "@element-plus/icons-vue";
 import {ElIcon} from "element-plus";
-
-export default {
-  components: {Close}
-}
 </script>
 
 <style lang="scss" scoped>
@@ -31,8 +27,10 @@ export default {
   justify-content: center;
 }
 .content{
-  width: 30vw;
-  padding: 20px;
+  max-width: 50vw;
+  max-height: 60vh;
+  overflow: scroll;
+  padding: 40px;
   background-color: white;
   border-radius: 10px;
   position: relative;

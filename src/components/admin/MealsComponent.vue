@@ -25,7 +25,7 @@
         <el-input v-model="state.addedMeal.description" type="textarea" placeholder="Описание"/>
         <p>Изображение:</p>
         <el-input placeholder="Название изображения" style="margin-bottom: 20px" v-model="state.addedMeal.image"/>
-        <img :src="state.addImage" alt="" v-if="state.addImage.length !== ''">
+        <img :src="state.addImage" alt="" v-if="state.addImage !== ''">
         <p>Ингредиенты:</p>
         <el-select
             v-model="state.addedMeal.products"
@@ -55,12 +55,8 @@
 <script setup>
 import {computed, onMounted, reactive} from "vue";
 import axios from "axios";
-import {useMainStore} from "@/stores/counter";
+import {useMainStore} from "@/stores/mainStore";
 import WindowComponent from "@/components/WindowComponent.vue";
-
-const log = () => {
-  console.log(state.addedMeal)
-}
 
 const store = useMainStore()
 
@@ -69,12 +65,11 @@ const editInit = async id => {
   await axios.get(import.meta.env.VITE_BASE_URL + "/api/meals/" + id).then(res => {
     state.addedMeal.id = res.data.id
     state.addedMeal.title = res.data.title
-    state.addedMeal.description = res.data.description
+    state.addedMeal.description = res.data.description.result.path
     state.addedMeal.image = res.data.image.name
     state.addImage = res.data.image.file
     state.addedMeal.products = res.data.products.map(product => product.id)
     store.isFetching = false
-    console.log(res)
   })
   state.edited = true
 }
@@ -89,7 +84,6 @@ const editMeal = async () =>{
     products: state.addedMeal.products
   }).then(res => {
     store.isFetching = false
-    console.log(res)
   })
   state.edited = false
   await init()
@@ -112,7 +106,6 @@ const createMeal = async () => {
     products: state.addedMeal.products
   }).then(res => {
     store.isFetching = false
-    console.log(res)
   })
   state.edited = false
   state.added = false

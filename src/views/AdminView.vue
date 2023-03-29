@@ -18,7 +18,7 @@ import {reactive} from "vue";
 import MealsComponent from "@/components/admin/MealsComponent.vue";
 import ProductsComponent from "@/components/admin/ProductsComponent.vue";
 import Fetching from "@/components/Fetching.vue";
-import {useMainStore} from "@/stores/counter";
+import {useMainStore} from "@/stores/mainStore";
 
 const store = useMainStore()
 
